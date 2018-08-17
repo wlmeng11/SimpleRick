@@ -27,6 +27,10 @@
 #define LED_ACQUISITION 13
 #define BUTTON_TRIG 4
 
+#define NOP3 "nop\n\t""nop\n\t""nop\n\t" // ~ 50 ns delay
+#define NOP4 "nop\n\t""nop\n\t""nop\n\t""nop\n\t"
+#define NOP6 "nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t" // ~ 100 ns delay
+
 void setup() {
 	// Initialize inputs & outputs
 	pinMode(SERVO_PWM, OUTPUT);
@@ -58,10 +62,8 @@ void loop() {
 		digitalWrite(TGC_RESET, LOW);
 
 		digitalWriteFast(PULSE_INA, HIGH);
-		digitalWriteFast(PULSE_INB, HIGH);
-		//delayMicroseconds(1);
+		//__asm__(NOP3);
 		digitalWriteFast(PULSE_INA, LOW);
-		digitalWriteFast(PULSE_INB, LOW);
 		delayMicroseconds(5);
 	}
 }
