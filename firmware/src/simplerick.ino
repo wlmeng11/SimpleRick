@@ -34,7 +34,7 @@
 #define NOP4 "nop\n\t""nop\n\t""nop\n\t""nop\n\t"
 #define NOP6 "nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t" // ~ 100 ns delay
 
-uint16_t dead_time = 5; // time between scan lines, in microseconds
+uint16_t dead_time = 50; // time between scan lines, in microseconds
 
 Servo myservo;
 uint8_t servo_angle = 90;
@@ -43,7 +43,7 @@ uint8_t servo_angle = 90;
  * @brief
  * Calibrate the TGC by using DAC output to vary TGC period.
  *
- * @param[in] desired scanline time, in microseconds
+ * @param[in] scanline_time: desired scanline time, in microseconds
  */
 void calibrate_TGC(const uint16_t scanline_time) {
 	uint8_t DAC_output = 254;
@@ -51,7 +51,7 @@ void calibrate_TGC(const uint16_t scanline_time) {
 	uint16_t TGC_period = 0;
 
 	Serial.println("Calibrating TGC...");
-	Serial.printf("Setting scanline time to %d microseconds\n", scanline_time);
+	Serial.printf("Attempting to set scanline time to %d microseconds...\n", scanline_time);
 
 	while (1) {
 		digitalWriteFast(TGC_RESET, HIGH); // reset TGC
@@ -62,7 +62,7 @@ void calibrate_TGC(const uint16_t scanline_time) {
 		digitalWriteFast(TGC_RESET, LOW); // enable TGC
 		while (digitalRead(TGC_TRIG) == LOW) {} // wait for trigger
 		TGC_period = since_TGC_start;
-		Serial.printf("Measured TGC period as %d microseconds\n", TGC_period);
+		Serial.printf("TGC period=%d us\n", TGC_period);
 
 		// adjust DAC output accordingly. check for oscillations around set point
 		if (TGC_period > scanline_time && previous_DAC_output < DAC_output) { // TGC is too slow
@@ -82,10 +82,63 @@ void calibrate_TGC(const uint16_t scanline_time) {
 		}
 	}
 	Serial.printf("Finished TGC calibration with DAC output %d.\n", DAC_output);
+	Serial.flush();
+	
 }
 
-// call on interrupt
-void reset_TGC() {
+/*
+ *
+ */
+void initiate_scanline() {
+}
+
+#define BUFSIZE 1024
+
+/*
+ * Parse a serial command, and perform the appropriate action.
+ * The command API is a work-in-progress and subject to change.
+ *
+ * Example commands:
+ * =================
+ * set angle 20 			set motor angle to 20 degrees
+ * set tgc time 200  		set TGC period to 200 microseconds
+ * set dead time 50 		set dead time to 50 microseconds
+ * set damping time 2 		set damping time to 2 microseconds
+ * sweep angle 90 			sweep motor +90 degrees
+ * scan lines 50 			acquire 50 scan lines without moving motor
+ * scan angle 90 			acquire data while sweeping motor +90 degrees
+ *
+ * TODO: use the Arduino JSON library instead
+ */
+void parse_command() {
+	static char recvbuf[BUFSIZE];
+
+	if (Serial.available()) {
+		char *p = recvbuf;
+		uint16_t i;
+		for (i = 0; i < sizeof(recvbuf); i++) {
+			char incoming_byte = Serial.read();
+			if (incoming_byte < 0) { // no more data to read
+				recvbuf[i] = '\0'; // NULL termination
+				break;
+			}
+			else {
+				recvbuf[i] = incoming_byte;
+			}
+		}
+		recvbuf[sizeof(recvbuf) - 1] = '\0'; // NULL terminate in case of truncation
+	}
+
+	if (strncmp(recvbuf, "set angle ", strlen("set angle "))) {
+		sscanf(recvbuf, "set angle %d", servo_angle);
+		myservo.write(servo_angle);
+	}
+	else if (strncmp(recvbuf, "END", strlen("END"))) {
+	}
+	else {
+		Serial.printf("Failed to parse command: %s\n", recvbuf);
+		Serial.send_now();
+	}
 }
 
 void setup() {
@@ -99,8 +152,8 @@ void setup() {
 	pinMode(LED_ACQUISITION, OUTPUT);
 	pinMode(BUTTON_TRIG, INPUT_PULLUP);
 
-	// Initialize serial communication over USB
-	Serial.begin(9600);
+	// Initialize serial communication
+	Serial.begin(115200);
 	Serial.println("Welcome to SimpleRick!");
 
 	// Set initial state of outputs
@@ -121,7 +174,8 @@ void loop() {
 		digitalWriteFast(PULSE_INA, HIGH); // pulse of high voltage
 		digitalWriteFast(PULSE_INA, LOW);
 		digitalWriteFast(PULSE_INB, LOW); // damping
-		delayMicroseconds(2);
+		uint16_t damping_time = 1;
+		delayMicroseconds(damping_time);
 		digitalWriteFast(PULSE_INB, HIGH);
 	}
 }
