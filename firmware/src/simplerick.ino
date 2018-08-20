@@ -2,6 +2,7 @@
  * simplerick.ino
  *
  * This file is part of the SimpleRick firmware.
+ *
  * Copyright (C) 2018 William Meng
  *
  * This program is free software: you can redistribute it and/or modify  
@@ -34,10 +35,28 @@
 #define NOP4 "nop\n\t""nop\n\t""nop\n\t""nop\n\t"
 #define NOP6 "nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t" // ~ 100 ns delay
 
+// TODO: put these "image parameters" in a global struct
+uint32_t totalImageMillis = 1000; // total image time, in milliseconds
+uint16_t TGC_time = 200;
+uint16_t damping_time = 1; // duration of active damping via INB, in microseconds
 uint16_t dead_time = 50; // time between scan lines, in microseconds
 
 Servo myservo;
-uint8_t servo_angle = 90;
+volatile uint8_t servo_angle = 90;
+uint16_t startAngle = 30; // angle to start sweep (degrees)
+uint16_t angleRange = 90; // range of angles to sweep (degrees)
+
+volatile elapsedMillis millisSinceImageStart = 0;
+
+/*
+ * @brief
+ *
+ * @param[in] totalImageMillis: how many milliseconds the image should span
+ * @param[in] angleRange: how many degrees the image should span
+ */
+int getServoAngle() {
+	return millisSinceImageStart * angleRange / totalImageMillis;
+}
 
 /*
  * @brief
@@ -86,14 +105,10 @@ void calibrate_TGC(const uint16_t scanline_time) {
 	
 }
 
-/*
- *
- */
-void initiate_scanline() {
-}
 
 #define BUFSIZE 1024
 
+// TODO: use ArduinoJSON to parse serial commands
 /*
  * Parse a serial command, and perform the appropriate action.
  * The command API is a work-in-progress and subject to change.
@@ -156,29 +171,45 @@ void setup() {
 	Serial.begin(115200);
 	Serial.println("Welcome to SimpleRick!");
 
+	// Calibrate TGC
+	calibrate_TGC(TGC_time);
+
 	// Set initial state of outputs
-	digitalWrite(LED_ACQUISITION, HIGH);
-	digitalWrite(TGC_RESET, LOW);
-	digitalWrite(PULSE_INA, LOW);
-	digitalWrite(PULSE_INB, HIGH);
-	calibrate_TGC(200);
+	digitalWrite(LED_ACQUISITION, LOW);
+	digitalWrite(TGC_RESET, HIGH); // gain=0
+	digitalWrite(PULSE_INA, LOW); // disconnect HV
+	digitalWrite(PULSE_INB, HIGH); // disconnect damping
+	myservo.write(startAngle);
 }
 
 void loop() {
-	// only do Tx pulse and TGC when user presses button
-	if (digitalReadFast(BUTTON_TRIG) == LOW) {
-		// TGC reset logic
-		if (digitalRead(TGC_TRIG) == HIGH) {
-			digitalWriteFast(TGC_RESET, HIGH);
-			delayMicroseconds(dead_time);
-			digitalWriteFast(TGC_RESET, LOW);
+	// TODO: check for serial data
 
-			digitalWriteFast(PULSE_INA, HIGH); // pulse of high voltage
-			digitalWriteFast(PULSE_INA, LOW);
-			digitalWriteFast(PULSE_INB, LOW); // damping
-			uint16_t damping_time = 1;
-			delayMicroseconds(damping_time);
-			digitalWriteFast(PULSE_INB, HIGH);
+	if (digitalReadFast(BUTTON_TRIG) == LOW) { // start image when user presses button
+		myservo.write(startAngle);
+		digitalWrite(LED_ACQUISITION, HIGH);
+		Serial.println("Starting image sweep");
+		millisSinceImageStart = 0;
+
+		while (millisSinceImageStart < totalImageMillis) {
+			// TGC reset logic
+			if (digitalRead(TGC_TRIG) == HIGH) {
+				digitalWriteFast(TGC_RESET, HIGH);
+				delayMicroseconds(dead_time);
+				digitalWriteFast(TGC_RESET, LOW);
+
+				digitalWriteFast(PULSE_INA, HIGH); // pulse of high voltage
+				digitalWriteFast(PULSE_INA, LOW);
+				digitalWriteFast(PULSE_INB, LOW); // damping
+				delayMicroseconds(damping_time);
+				digitalWriteFast(PULSE_INB, HIGH);
+			}
+			servo.write(getServoAngle()); // update servo angle
 		}
+
+		// reset everything to idle state
+		digitalWriteFast(TGC_RESET, HIGH);
+		digitalWrite(LED_ACQUISITION, LOW);
+		myservo.write(startAngle);
 	}
 }
