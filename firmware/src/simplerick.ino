@@ -165,17 +165,20 @@ void setup() {
 }
 
 void loop() {
-	// TGC reset logic
-	if (digitalRead(TGC_TRIG) == HIGH) {
-		digitalWriteFast(TGC_RESET, HIGH);
-		delayMicroseconds(dead_time);
-		digitalWriteFast(TGC_RESET, LOW);
+	// only do Tx pulse and TGC when user presses button
+	if (digitalReadFast(BUTTON_TRIG) == LOW) {
+		// TGC reset logic
+		if (digitalRead(TGC_TRIG) == HIGH) {
+			digitalWriteFast(TGC_RESET, HIGH);
+			delayMicroseconds(dead_time);
+			digitalWriteFast(TGC_RESET, LOW);
 
-		digitalWriteFast(PULSE_INA, HIGH); // pulse of high voltage
-		digitalWriteFast(PULSE_INA, LOW);
-		digitalWriteFast(PULSE_INB, LOW); // damping
-		uint16_t damping_time = 1;
-		delayMicroseconds(damping_time);
-		digitalWriteFast(PULSE_INB, HIGH);
+			digitalWriteFast(PULSE_INA, HIGH); // pulse of high voltage
+			digitalWriteFast(PULSE_INA, LOW);
+			digitalWriteFast(PULSE_INB, LOW); // damping
+			uint16_t damping_time = 1;
+			delayMicroseconds(damping_time);
+			digitalWriteFast(PULSE_INB, HIGH);
+		}
 	}
 }
