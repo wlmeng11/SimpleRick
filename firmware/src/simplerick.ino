@@ -36,17 +36,17 @@
 #define NOP6 "nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t" // ~ 100 ns delay
 
 // TODO: put these "image parameters" in a global struct
-uint32_t totalImageMillis = 1000; // total image time, in milliseconds
+uint32_t totalImageMillis = 2000; // total image time, in milliseconds
 uint16_t TGC_time = 200;
 uint16_t damping_time = 1; // duration of active damping via INB, in microseconds
 uint16_t dead_time = 50; // time between scan lines, in microseconds
 
 Servo myservo;
-volatile uint8_t servo_angle = 90;
+uint8_t servo_angle = 90;
 uint16_t startAngle = 30; // angle to start sweep (degrees)
 uint16_t angleRange = 90; // range of angles to sweep (degrees)
 
-volatile elapsedMillis millisSinceImageStart = 0;
+elapsedMillis millisSinceImageStart = 0;
 
 /*
  * @brief
@@ -55,7 +55,7 @@ volatile elapsedMillis millisSinceImageStart = 0;
  * @param[in] angleRange: how many degrees the image should span
  */
 int getServoAngle() {
-	return millisSinceImageStart * angleRange / totalImageMillis;
+	return (unsigned long)millisSinceImageStart * angleRange / totalImageMillis;
 }
 
 /*
@@ -159,6 +159,7 @@ void parse_command() {
 void setup() {
 	// Initialize inputs & outputs
 	pinMode(SERVO_PWM, OUTPUT);
+	myservo.attach(SERVO_PWM);
 	pinMode(TGC_CTRL, OUTPUT);
 	pinMode(TGC_TRIG, INPUT);
 	pinMode(TGC_RESET, OUTPUT);
@@ -185,6 +186,7 @@ void setup() {
 void loop() {
 	// TODO: check for serial data
 
+	/*
 	if (digitalReadFast(BUTTON_TRIG) == LOW) { // start image when user presses button
 		myservo.write(startAngle);
 		digitalWrite(LED_ACQUISITION, HIGH);
@@ -192,19 +194,23 @@ void loop() {
 		millisSinceImageStart = 0;
 
 		while (millisSinceImageStart < totalImageMillis) {
-			// TGC reset logic
+			// for each scan line
 			if (digitalRead(TGC_TRIG) == HIGH) {
+				// reset TGC and wait for dead time
 				digitalWriteFast(TGC_RESET, HIGH);
 				delayMicroseconds(dead_time);
 				digitalWriteFast(TGC_RESET, LOW);
 
+				// send Tx pulse
 				digitalWriteFast(PULSE_INA, HIGH); // pulse of high voltage
 				digitalWriteFast(PULSE_INA, LOW);
 				digitalWriteFast(PULSE_INB, LOW); // damping
 				delayMicroseconds(damping_time);
 				digitalWriteFast(PULSE_INB, HIGH);
+
+				// update servo
+				myservo.write(getServoAngle()); // update servo angle
 			}
-			servo.write(getServoAngle()); // update servo angle
 		}
 
 		// reset everything to idle state
@@ -212,4 +218,10 @@ void loop() {
 		digitalWrite(LED_ACQUISITION, LOW);
 		myservo.write(startAngle);
 	}
+	*/
+
+	static int i = 0;
+	myservo.write(i%180);
+	i++;
+	delay(100);
 }
