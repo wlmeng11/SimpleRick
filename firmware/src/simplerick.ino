@@ -36,7 +36,7 @@
 #define NOP6 "nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t" // ~ 100 ns delay
 
 // TODO: put these "image parameters" in a global struct
-uint32_t totalImageMillis = 2000; // total image time, in milliseconds
+uint32_t totalImageMillis = 1000; // total image time, in milliseconds
 uint16_t TGC_time = 200;
 uint16_t damping_time = 1; // duration of active damping via INB, in microseconds
 uint16_t dead_time = 50; // time between scan lines, in microseconds
@@ -48,15 +48,6 @@ uint16_t angleRange = 90; // range of angles to sweep (degrees)
 
 elapsedMillis millisSinceImageStart = 0;
 
-/*
- * @brief
- *
- * @param[in] totalImageMillis: how many milliseconds the image should span
- * @param[in] angleRange: how many degrees the image should span
- */
-int getServoAngle() {
-	return (unsigned long)millisSinceImageStart * angleRange / totalImageMillis;
-}
 
 /*
  * @brief
@@ -183,33 +174,57 @@ void setup() {
 	myservo.write(startAngle);
 }
 
+/*
+ * Reset the TGC and wait for the duration of the dead time before starting TGC again.
+ */
+void reset_TGC() {
+	// reset TGC and wait for dead time
+	digitalWriteFast(TGC_RESET, HIGH);
+	delayMicroseconds(dead_time);
+	digitalWriteFast(TGC_RESET, LOW);
+}
+
+/*
+ * Send Tx pulse and damping pulse.
+ */
+void send_Tx() {
+	digitalWriteFast(PULSE_INA, HIGH); // pulse of high voltage
+	digitalWriteFast(PULSE_INA, LOW);
+	digitalWriteFast(PULSE_INB, LOW); // damping
+	delayMicroseconds(damping_time);
+	digitalWriteFast(PULSE_INB, HIGH);
+}
+
+/*
+ * @brief
+ *
+ * @param[in] totalImageMillis: how many milliseconds the image should span
+ * @param[in] angleRange: how many degrees the image should span
+ */
+void update_servo() {
+	servo_angle = startAngle + millisSinceImageStart * angleRange / totalImageMillis;
+	myservo.write(servo_angle);
+}
+
 void loop() {
 	// TODO: check for serial data
 
-	/*
 	if (digitalReadFast(BUTTON_TRIG) == LOW) { // start image when user presses button
-		myservo.write(startAngle);
-		digitalWrite(LED_ACQUISITION, HIGH);
 		Serial.println("Starting image sweep");
+		digitalWrite(LED_ACQUISITION, HIGH);
 		millisSinceImageStart = 0;
 
+		// start the first scanline
+		reset_TGC();
+		send_Tx();
+		update_servo();
+
 		while (millisSinceImageStart < totalImageMillis) {
-			// for each scan line
 			if (digitalRead(TGC_TRIG) == HIGH) {
-				// reset TGC and wait for dead time
-				digitalWriteFast(TGC_RESET, HIGH);
-				delayMicroseconds(dead_time);
-				digitalWriteFast(TGC_RESET, LOW);
-
-				// send Tx pulse
-				digitalWriteFast(PULSE_INA, HIGH); // pulse of high voltage
-				digitalWriteFast(PULSE_INA, LOW);
-				digitalWriteFast(PULSE_INB, LOW); // damping
-				delayMicroseconds(damping_time);
-				digitalWriteFast(PULSE_INB, HIGH);
-
-				// update servo
-				myservo.write(getServoAngle()); // update servo angle
+				// start a new scanline
+				reset_TGC();
+				send_Tx();
+				update_servo();
 			}
 		}
 
@@ -218,10 +233,4 @@ void loop() {
 		digitalWrite(LED_ACQUISITION, LOW);
 		myservo.write(startAngle);
 	}
-	*/
-
-	static int i = 0;
-	myservo.write(i%180);
-	i++;
-	delay(100);
 }
