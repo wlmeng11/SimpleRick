@@ -43,7 +43,7 @@ uint16_t dead_time = 50; // time between scan lines, in microseconds
 
 Servo myservo;
 uint8_t servo_angle = 90;
-uint16_t startAngle = 30; // angle to start sweep (degrees)
+uint16_t startAngle = 75; // angle to start sweep (degrees)
 uint16_t angleRange = 90; // range of angles to sweep (degrees)
 
 elapsedMillis millisSinceImageStart = 0;
