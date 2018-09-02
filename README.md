@@ -1,6 +1,8 @@
 # SimpleRick
 
-Low-cost 2D ultrasound imaging for makers
+Low-cost 2D ultrasound imaging hardware for makers
+
+![v1.1 assembly](hardware/v1.1/DSCN7850.JPG)
 
 ## Introduction
 _“Come home to the impossible flavor of your own completion. Come home to Simple Rick's.”_
@@ -8,9 +10,12 @@ _“Come home to the impossible flavor of your own completion. Come home to Simp
 Based on kelu124’s [un0rick](http://un0rick.cc/), this project aims to provide hardware and software to perform 2D ultrasound imaging
 at a cost affordable makers and electronics hobbyists.
 To accomplish this, I’ve made a number of simplifications and modifications such as:
+
 * removing the FPGA and its supporting circuitry
-* using cheaper parts wherever possible
+* using cheaper substitutes for some components
 * reducing board size
+* ramp generator provides TGC with slow DAC update
+* offload data acquistion to RTL-SDR with [rtl-ultrasound](https://github.com/wlmeng11/rtl-ultrasound)
 
 Of course, these changes come at the expensive of flexibility and extensibility.
 If all you want to do is get ultrasound images onto your computer as cheaply as possible, this project is for you.
@@ -21,7 +26,7 @@ More to come soon!
 
 ## Links
 * [Hackaday page](https://hackaday.io/project/160196-simplerick)
-* Slack channel
+* [Slack channel](https://usdevkit.slack.com/messages/simplerick/)
 
 ## DISCLAIMER
 This is NOT a medical device. Ultrasound technology can expose a user to hazards including but not limited to: high voltages, tissue-damaging acoustic waves, and materials containing lead (Pb). I am not liable for any injuries, death, or destruction of property that may occur as a result of using any materials provided by this project. You have been warned!
