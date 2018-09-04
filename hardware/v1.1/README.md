@@ -11,8 +11,10 @@
 | Layers       | 4            |
 | Manufacturer | JLC PCB      |
 
+## BOM
+See [BOM spreadsheet](SimpleRick_BOM_v1.1.xlsx) listing all components to be soldered to the board.
 
-## Additional hardware
+### Additional hardware
 #### Minimal setup
 * STEMiNC [SMD07T05R412WL](https://www.steminc.com/PZT/en/disc-7x05mm-r-wire-leads-4-mhz) piezo
 * [Teensy 3.2](https://www.amazon.com/dp/B015M3K5NG/)
@@ -32,12 +34,28 @@
 * BNC cables
 * oscilloscope with probes
 
+## Assembly Instructions
+1. Use stencil to apply solder paste.
+2. Pick and place SMD components.
+3. Reflow.
+4. Manually solder through hole components.
+5. (optional) Solder test points to pads on back.
+5. Solder header pins to Teensy, then attach it to header pins on SimpleRick. 
+6. Solder jumper wires to boost converter, then attach it to header pins on SimpleRick.
+7. Solder female SMA connector to piezo, then connect it to SimpleRick with SMA cable.
+8. Attach piezo to servo motor however you like. I used hot glue.
+
+## Usage
+1. Flash SimpleRick firmware to Teensy.
+2. Connect RTL-SDR and low pass filter with SMA cables.
+3. Follow instructions for using rtl-ultrasound software.
+
 ## Photos
 #### Unassembled
 Rendering by OSH Park
 ![OSH Park rendering](SimpleRick_PCB_v1.1.png)
-Bare PCB, front
-![bare PCB front](DSCN7790.JPG)
+Bare PCB, front and back
+![bare PCB](DSCN7921.JPG)
 
 #### Assembled
 Assembled PCB, front
@@ -68,14 +86,14 @@ Making the connections
 ![with laptop and oscilloscope](DSCN7876.JPG)
 
 ## Next Steps
-Errata in PCB layout:
+Fix errata in PCB layout:
 
 * swapped labels for V_PIEZO and GND testpoints
 * LED\_ACQUISITION should say LED\_PWR
 * some silkscreen labels are cutoff by vias
 * GND testpoint for V\_GAIN is inconveniently placed too close to V\_GAIN testpoint
 
-Things to be improved:
+Other things to be improved:
 
 * high current traces should be wider
 * add bleeder resistor between V_PIEZO and GND

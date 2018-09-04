@@ -25,6 +25,7 @@ standalone capability, wireless operation, etc. then you’ll be better served b
 More to come soon!
 
 ## Links
+* [Most recent PCB design in Upverter](https://upverter.com/wlmeng11/a188e8df0fe636d4/SimpleRick/)
 * [Hackaday page](https://hackaday.io/project/160196-simplerick)
 * [Slack channel](https://usdevkit.slack.com/messages/simplerick/)
 
