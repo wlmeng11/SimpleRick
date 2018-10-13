@@ -1,6 +1,8 @@
 # SimpleRick
-
 Low-cost 2D ultrasound imaging hardware for makers
+
+[![HitCount](http://hits.dwyl.io/wlmeng11/SimpleRick.svg)](http://hits.dwyl.io/wlmeng11/SimpleRick)
+
 
 ![v1.1 assembly](hardware/v1.1/DSCN7850.JPG)
 
