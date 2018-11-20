@@ -51,7 +51,7 @@ An echo that is heard later in time will have traveled through a further distanc
 Because acoustic power decays exponentially as the wave propogates through a medium, 
 the received signal will decay exponentially with time. 
 To compensate for this attenuation, the receiver gain should increase exponentially over time.
-the gain of the AD8331 varies exponentially with the voltage on its GAIN pin.
+The gain of the AD8331 varies exponentially with the voltage on its GAIN pin,
 therefore a linear ramp signal is sufficient to drive the GAIN pin.
 
 In order to minimize computational overhead and I/O bandwidth in the microcontroller,
