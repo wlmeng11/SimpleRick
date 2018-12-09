@@ -1,5 +1,10 @@
 # SimpleRick
-**Hardware** | [Firmware](https://github.com/wlmeng11/SimpleRick_firmware) | [Software](https://github.com/wlmeng11/rtl-ultrasound)
+
+[Software](https://github.com/wlmeng11/rtl-ultrasound)
+&larr;
+[Firmware](https://github.com/wlmeng11/SimpleRick_firmware)
+&larr;
+**Hardware**
 
 Low-cost 2D ultrasound imaging hardware for makers
 
